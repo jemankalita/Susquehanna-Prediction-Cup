@@ -1,0 +1,5 @@
+.env
+logs/
+HALT
+__pycache__/
+.pytest_cache/

@@ -1,0 +1,93 @@
+{
+  "tournament_slug": "midterm-elections",
+  "loop_seconds": 60,
+  "election_night_loop_seconds": 20,
+  "stop_trading_utc": "2026-11-04T16:55:00Z",
+  "value": {
+    "min_edge": 0.04,
+    "max_fair_spread": 0.04,
+    "kelly_fraction": 0.5,
+    "max_market_exposure": 15000,
+    "spread_edge_mult": 0.5
+  },
+  "risk": {
+    "max_total_exposure_frac": 0.85,
+    "cash_reserve_frac": 0.1,
+    "max_drawdown_frac": 0.35,
+    "max_order_qty": 50000,
+    "max_race_exposure": 15000,
+    "max_net_party_frac": 0.45
+  },
+  "near_certain": {
+    "active_from_utc": "2026-11-04T00:00:00Z",
+    "min_fair": 0.97,
+    "max_price": 0.985,
+    "max_market_exposure": 30000
+  },
+  "maker": {
+    "enabled": true,
+    "min_spread": 0.06,
+    "edge": 0.03,
+    "qty": 1500,
+    "ttl_minutes": 20
+  },
+  "scope": {
+    "exclude_states": [
+      "GA"
+    ],
+    "exclude_market_ids": [],
+    "hold_market_ids": [
+      "152",
+      "154",
+      "271",
+      "294",
+      "359"
+    ]
+  },
+  "kalshi_overrides": {},
+  "fair_overrides": {},
+  "basket": {
+    "enabled": true,
+    "_thesis": "Republican polling miss (2016/2020-style): GOP holds the House and Senate and wins TX/ME/MI Senate",
+    "premium": 0.01,
+    "chunk_cost": 3000,
+    "ttl_minutes": 10,
+    "legs": [
+      {
+        "market_id": "152",
+        "side": "yes",
+        "target_cost": 15000,
+        "max_price": 0.11,
+        "_name": "Republicans win U.S. House"
+      },
+      {
+        "market_id": "154",
+        "side": "yes",
+        "target_cost": 8000,
+        "max_price": 0.42,
+        "_name": "Republicans win U.S. Senate"
+      },
+      {
+        "market_id": "294",
+        "side": "yes",
+        "target_cost": 4000,
+        "max_price": 0.4,
+        "_name": "Republicans win Texas Senate"
+      },
+      {
+        "market_id": "271",
+        "side": "yes",
+        "target_cost": 4000,
+        "max_price": 0.45,
+        "_name": "Republicans win Maine Senate"
+      },
+      {
+        "market_id": "359",
+        "side": "yes",
+        "target_cost": 4000,
+        "max_price": 0.32,
+        "_name": "Republicans win Michigan Senate"
+      }
+    ]
+  }
+}

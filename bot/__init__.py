@@ -1,0 +1,1 @@
+"""Predictions Cup trading bot."""
