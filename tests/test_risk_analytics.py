@@ -90,3 +90,18 @@ def test_old_peak_on_different_basis_is_ignored(tmp_path, monkeypatch):
     assert engine.load_peak_equity() == 0.0
     f.write_text(json.dumps({"peak_equity": 150000, "equity_basis": engine.EQUITY_BASIS}))
     assert engine.load_peak_equity() == 150000
+
+
+# ---------- unwind ----------
+def test_unwind_plans_opposite_buy_at_fair_minus_giveup():
+    from bot.unwind import plan_unwind
+    positions = [{"exchangeId": "1", "quantity": -1000, "costBasis": 950, "marketTitle": "R RI"},   # hold NO
+                 {"exchangeId": "2", "quantity": 500, "costBasis": 400, "marketTitle": "D MN"},     # hold YES
+                 {"exchangeId": "3", "quantity": 100, "costBasis": 10, "marketTitle": "basket"}]
+    closes = {c.exchange_id: c for c in plan_unwind(positions, {"1": 0.01, "2": 0.875, "3": 0.1}, {"3"}, 0.02)}
+    assert set(closes) == {"1", "2"}
+    no_close = closes["1"]                      # NO fair 0.99 -> sell >= 0.97 -> buy YES <= 0.03
+    assert no_close.buy_side == "yes" and no_close.limit == pytest.approx(0.03) and no_close.quantity == 1000
+    yes_close = closes["2"]                     # YES fair 0.875 -> sell >= 0.855 -> buy NO <= 0.145
+    assert yes_close.buy_side == "no" and yes_close.limit == pytest.approx(0.145)
+    assert yes_close.min_receive >= 0.855 - 1e-9

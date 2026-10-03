@@ -9,20 +9,25 @@
     python run.py run --live       loop and place real orders
     python run.py cancel-all       cancel every resting order
     python run.py leaderboard      top of the tournament leaderboard
+    python run.py unwind [--live]  close non-basket positions near fair to free cash for the basket
 """
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
 import time
 
 from bot import analytics, risk
 from bot.config import ROOT, load_settings
+from datetime import timedelta
+
 from bot.engine import (EngineState, compute_fairs, load_listings, load_peak_equity, loop_seconds,
-                        run_cycle)
+                        run_cycle, unwinding_exchanges, utc_now, UNWIND_FILE)
 from bot.sm_client import ApiError, SuperMarketClient
 from bot.store import Store
+from bot.unwind import plan_unwind
 
 LOG_PATH = ROOT / "logs" / "bot.log"
 
@@ -120,6 +125,37 @@ def cmd_analyze(s) -> None:
         print(f"  {mean:+.3f}  n={n:>4}  {title}")
 
 
+UNWIND_GIVEUP = 0.02      # accept selling up to 2 points below fair
+UNWIND_TTL_MINUTES = 30
+
+
+def cmd_unwind(client: SuperMarketClient, s, live: bool, keep_markets: set[str] | None = None) -> None:
+    t = client.tournament(s.tournament_slug)
+    listings = load_listings(client, s.tournament_slug)
+    book = compute_fairs(listings, s)
+    basket = {leg.market_id for leg in s.basket_legs}
+    keep = {l.exchange_id for l in listings if l.market_id in basket | (keep_markets or set())}
+    closes = plan_unwind(client.positions(s.tournament_slug), book.fair, keep, UNWIND_GIVEUP)
+    total = sum(c.min_cash for c in closes)
+    print(f"{'shares':>8} {'held':>4} {'sell >=':>7} {'cash >=':>9}  market")
+    for c in closes:
+        print(f"{c.quantity:8d} {c.held_side.upper():>4} {c.min_receive:7.3f} {c.min_cash:9,.0f}  {c.title}")
+    print()
+    print(f"{len(closes)} positions; frees at least {total:,.0f} SUSQies if fully filled (basket positions kept).")
+    if not live:
+        print("Dry run. Re-run with --live to place the closing orders.")
+        return
+    expires = (utc_now() + timedelta(minutes=UNWIND_TTL_MINUTES)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    UNWIND_FILE.parent.mkdir(parents=True, exist_ok=True)
+    UNWIND_FILE.write_text(json.dumps(sorted({c.exchange_id for c in closes} | unwinding_exchanges())), encoding="utf-8")
+    for c in closes:
+        try:
+            r = client.place_order(c.exchange_id, c.buy_side, "buy", c.quantity, c.limit, t["id"], expires)
+            print(f"  closed {r.get('quantityTraded')}/{c.quantity}  {c.title}")
+        except ApiError as exc:
+            print(f"  failed {c.title}: {exc}")
+
+
 def cmd_leaderboard(client: SuperMarketClient, slug: str) -> None:
     board = client.leaderboard(slug)
     for row in board.get("leaderboard", [])[:20]:
@@ -148,8 +184,9 @@ def cmd_run(client: SuperMarketClient, s, live: bool, once: bool) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=["check", "fairs", "report", "analyze", "once", "run",
-                                            "cancel-all", "leaderboard"])
+                                            "cancel-all", "leaderboard", "unwind"])
     parser.add_argument("--live", action="store_true", help="place real orders (default is dry-run)")
+    parser.add_argument("--keep", default="", help="unwind: comma-separated market ids to keep")
     args = parser.parse_args()
 
     _setup_logging()
@@ -164,6 +201,8 @@ def main() -> None:
         cmd_fairs(client, s)
     elif args.command == "report":
         cmd_report(client, s)
+    elif args.command == "unwind":
+        cmd_unwind(client, s, args.live, {m.strip() for m in args.keep.split(',') if m.strip()})
     elif args.command == "leaderboard":
         cmd_leaderboard(client, s.tournament_slug)
     elif args.command == "cancel-all":

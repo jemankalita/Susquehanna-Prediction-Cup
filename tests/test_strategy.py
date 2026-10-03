@@ -10,7 +10,11 @@ from bot.strategy import MarketView, derive_missing_fairs, floor_tick, kelly_fra
 
 @pytest.fixture
 def s():
-    return load_settings(require_key=False)
+    """Fixed strategy parameters so tests don't depend on the live config.json."""
+    return replace(load_settings(require_key=False), min_edge=0.04, spread_edge_mult=0.5, kelly_fraction=0.5,
+                   max_market_exposure=15000, max_order_qty=50000, near_certain_fair=0.97,
+                   near_certain_max_price=0.985, near_certain_max_exposure=30000, maker_enabled=True,
+                   maker_min_spread=0.06, maker_edge=0.03, maker_qty=1500, maker_ttl_minutes=20)
 
 
 def view(**kw):

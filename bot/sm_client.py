@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 # Account budget is 100 reads + 30 writes per minute; stay below it.
 READS_PER_MIN = 85
 WRITES_PER_MIN = 25
-TIMEOUT_S = 20
+TIMEOUT_S = 45   # API has been observed taking ~30s under load
 MAX_RETRIES = 4
 PRICE_IDS_PER_CALL = 100
 MARKETS_PAGE_LIMIT = 100   # endpoint max
