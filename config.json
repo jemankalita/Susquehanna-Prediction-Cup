@@ -1,10 +1,10 @@
 {
   "tournament_slug": "midterm-elections",
   "loop_seconds": 60,
-  "election_night_loop_seconds": 20,
+  "election_night_loop_seconds": 5,
   "stop_trading_utc": "2026-11-04T16:55:00Z",
   "value": {
-    "min_edge": 0.04,
+    "min_edge": 0.5,
     "max_fair_spread": 0.04,
     "kelly_fraction": 0.5,
     "max_market_exposure": 15000,
@@ -12,7 +12,7 @@
   },
   "risk": {
     "max_total_exposure_frac": 0.85,
-    "cash_reserve_frac": 0.1,
+    "cash_reserve_frac": 0.0,
     "max_drawdown_frac": 0.35,
     "max_order_qty": 50000,
     "max_race_exposure": 15000,
@@ -25,7 +25,7 @@
     "max_market_exposure": 30000
   },
   "maker": {
-    "enabled": true,
+    "enabled": false,
     "min_spread": 0.06,
     "edge": 0.03,
     "qty": 1500,
@@ -37,57 +37,232 @@
     ],
     "exclude_market_ids": [],
     "hold_market_ids": [
+      "151",
       "152",
       "154",
+      "160",
+      "183",
+      "195",
+      "198",
+      "200",
+      "202",
+      "210",
+      "214",
+      "218",
+      "226",
+      "228",
+      "232",
+      "236",
+      "238",
+      "240",
+      "270",
       "271",
+      "286",
       "294",
-      "359"
+      "306",
+      "312",
+      "315",
+      "333",
+      "348",
+      "359",
+      "372",
+      "378",
+      "382",
+      "388"
     ]
   },
   "kalshi_overrides": {},
   "fair_overrides": {},
   "basket": {
     "enabled": true,
-    "_thesis": "Republican polling miss (2016/2020-style): GOP holds the House and Senate and wins TX/ME/MI Senate",
-    "premium": 0.01,
+    "_thesis": "Republican polling miss: GOP holds House + Senate and wins swing seats/governorships",
+    "premium": 0.025,
     "chunk_cost": 3000,
     "ttl_minutes": 10,
     "legs": [
       {
         "market_id": "152",
         "side": "yes",
-        "target_cost": 15000,
-        "max_price": 0.11,
+        "target_cost": 20000,
+        "max_price": 0.12,
         "_name": "Republicans win U.S. House"
+      },
+      {
+        "market_id": "151",
+        "side": "no",
+        "target_cost": 10000,
+        "max_price": 0.12,
+        "_name": "Democrats do NOT win U.S. House"
       },
       {
         "market_id": "154",
         "side": "yes",
-        "target_cost": 8000,
-        "max_price": 0.42,
+        "target_cost": 15000,
+        "max_price": 0.45,
         "_name": "Republicans win U.S. Senate"
+      },
+      {
+        "market_id": "236",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.22,
+        "_name": "R win PA-07"
+      },
+      {
+        "market_id": "232",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.43,
+        "_name": "R win NY-17"
+      },
+      {
+        "market_id": "210",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.22,
+        "_name": "R win CO-08"
+      },
+      {
+        "market_id": "200",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.22,
+        "_name": "R win AZ-06"
+      },
+      {
+        "market_id": "198",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.28,
+        "_name": "R win AZ-01"
+      },
+      {
+        "market_id": "218",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.28,
+        "_name": "R win IA-03"
+      },
+      {
+        "market_id": "240",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.25,
+        "_name": "R win PA-10"
+      },
+      {
+        "market_id": "238",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.38,
+        "_name": "R win PA-08"
+      },
+      {
+        "market_id": "333",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.4,
+        "_name": "R win MI-10"
+      },
+      {
+        "market_id": "228",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.17,
+        "_name": "R win NJ-07"
+      },
+      {
+        "market_id": "214",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.23,
+        "_name": "R win IA-01"
+      },
+      {
+        "market_id": "348",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.17,
+        "_name": "R win WA-03"
+      },
+      {
+        "market_id": "226",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.12,
+        "_name": "R win NE-02"
+      },
+      {
+        "market_id": "202",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.14,
+        "_name": "R win CA-22"
       },
       {
         "market_id": "294",
         "side": "yes",
         "target_cost": 4000,
         "max_price": 0.4,
-        "_name": "Republicans win Texas Senate"
+        "_name": "R win Texas Senate"
       },
       {
         "market_id": "271",
         "side": "yes",
         "target_cost": 4000,
         "max_price": 0.45,
-        "_name": "Republicans win Maine Senate"
+        "_name": "R win Maine Senate"
       },
       {
         "market_id": "359",
         "side": "yes",
         "target_cost": 4000,
         "max_price": 0.32,
-        "_name": "Republicans win Michigan Senate"
+        "_name": "R win Michigan Senate"
+      },
+      {
+        "market_id": "382",
+        "side": "yes",
+        "target_cost": 3000,
+        "max_price": 0.19,
+        "_name": "R win NH Senate"
+      },
+      {
+        "market_id": "378",
+        "side": "yes",
+        "target_cost": 3000,
+        "max_price": 0.36,
+        "_name": "R win Alaska Senate"
+      },
+      {
+        "market_id": "160",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.17,
+        "_name": "R win Arizona Governor"
+      },
+      {
+        "market_id": "315",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.26,
+        "_name": "R win Wisconsin Governor"
+      },
+      {
+        "market_id": "306",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.16,
+        "_name": "R win Michigan Governor"
+      },
+      {
+        "market_id": "183",
+        "side": "yes",
+        "target_cost": 2000,
+        "max_price": 0.6,
+        "_name": "R win Nevada Governor"
       }
     ]
-  }
+  },
+  "mode_note": "PRIZE MODE: all free cash into the Republican-House basket; normal value/maker trading disabled"
 }

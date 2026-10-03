@@ -26,6 +26,7 @@ MIN_FAIR_COVERAGE = 0.5                    # circuit breaker: need fairs for hal
 FAIR_CONFIRM_TOLERANCE = 0.03              # fair must be stable across two cycles before we trade on it
 STALE_MARGIN_NEAR_CERTAIN = 0.0            # cancel a near-certain bid only once it is above fair
 FILLS_PAGE = 100
+UNWIND_FILE = ROOT / "logs" / "unwinding.json"  # exchanges being closed by `run.py unwind`
 EQUITY_BASIS = "kalshi_fair"           # what peak_equity in state.json is measured in
 
 
@@ -178,9 +179,9 @@ def run_cycle(client: SuperMarketClient, s: Settings, state: EngineState, live: 
     log.info("cash=%.0f at_risk=%.0f fair_equity=%.0f site_equity=%.0f coverage=%.0f%%",
              snap.cash, snap.cost_basis, equity, snap.cash + snap.site_value, book.coverage * 100)
 
-    basket_ex = _basket_exchanges(s, state)
+    hands_off = _basket_exchanges(s, state) | unwinding_exchanges()
     cancelled = cancel_stale_orders(client, s, state, [o for o in snap.open_orders
-                                                       if str(o["exchangeId"]) not in basket_ex], book.fair, live)
+                                                       if str(o["exchangeId"]) not in hands_off], book.fair, live)
     halted = halt_reason(s, state, equity)
     if halted:
         log.warning("Not opening new positions: %s", halted)
@@ -214,6 +215,13 @@ def _committed(snap: Snapshot, cancelled: set[str]) -> float:
 def _basket_exchanges(s: Settings, state: EngineState) -> set[str]:
     legs = {leg.market_id for leg in s.basket_legs}
     return {l.exchange_id for l in state.listings if l.market_id in legs}
+
+
+def unwinding_exchanges() -> set[str]:
+    try:
+        return set(json.loads(UNWIND_FILE.read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return set()
 
 
 def _leg_held_cost(snap: Snapshot, exchange_id: str, side: str) -> float:
@@ -250,10 +258,11 @@ def plan_all(s: Settings, state: EngineState, book: FairBook, snap: Snapshot,
     open_ex = {str(o["exchangeId"]) for o in snap.open_orders}
     pending = _pending_by_side(snap.open_orders, cancelled)
     basket_ex = _basket_exchanges(s, state)
+    unwinding = unwinding_exchanges()
     plans: list[tuple[Listing, OrderIntent]] = plan_basket(s, state, book, snap, cancelled, equity, open_ex)
     for l in state.listings:
         fair = book.fair.get(l.exchange_id)
-        if l.exchange_id in basket_ex or _excluded(l, s) or not _stable(l.exchange_id, fair, state.prev_fairs):
+        if l.exchange_id in basket_ex | unwinding or _excluded(l, s) or not _stable(l.exchange_id, fair, state.prev_fairs):
             continue
         q, k = snap.prices.get(l.exchange_id, {}), book.quote.get(l.exchange_id)
         view = MarketView(
