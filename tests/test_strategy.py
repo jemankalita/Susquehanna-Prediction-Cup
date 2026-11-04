@@ -166,3 +166,9 @@ def test_basket_no_side_uses_complement_prices():
     v = view(fair=0.915, best_bid=0.88, best_ask=0.885)   # NO ask = 0.12, NO bid = 0.115
     i = plan_basket_leg(v, "no", 10_000, 0.11, 0.0, 0.01, 3000, 10, 50_000)
     assert i and i.side == "no" and i.price <= 0.095
+
+
+def test_no_value_take_when_fair_below_min_edge(s):
+    # fair 0.006 - 0.04 edge < MIN_PRICE: must not clamp up to 0.005 and buy with no edge
+    intents = plan_market(view(fair=0.006, best_bid=None, best_ask=0.005), s, 100_000, 50_000)
+    assert not [i for i in intents if i.kind == "value" and i.side == "yes"]
