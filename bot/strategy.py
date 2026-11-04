@@ -99,7 +99,10 @@ def _plan_take(exchange_id, side, fair, ask, held, s: Settings, equity, budget,
         target = s.near_certain_max_exposure
         kind = "near_certain"
     else:
-        limit = floor_tick(fair - (s.min_edge + s.spread_edge_mult * fair_spread))
+        raw_limit = fair - (s.min_edge + s.spread_edge_mult * fair_spread)
+        if raw_limit < MIN_PRICE:
+            return None  # floor_tick would clamp up to MIN_PRICE and buy with no edge
+        limit = floor_tick(raw_limit)
         target = min(s.max_market_exposure, s.kelly_fraction * kelly_fraction(fair, limit) * equity)
         kind = "value"
     if ask > limit:
